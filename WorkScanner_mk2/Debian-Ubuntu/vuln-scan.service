@@ -1,0 +1,16 @@
+[Unit]
+Description=Weekly Vulnerability Scan
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+User=scanner
+Group=scanner
+ExecStart=/usr/bin/python3 /opt/vulnscan/orchestrator.py
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=28800
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

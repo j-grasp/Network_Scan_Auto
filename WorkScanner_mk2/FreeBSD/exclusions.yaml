@@ -1,0 +1,57 @@
+# =============================================================
+# EXCLUSIONS — Hosts that must NEVER be scanned under any
+# circumstances. This file is validated at startup AND
+# immediately before each nmap invocation.
+#
+# For OT/ICS segments, be exhaustive. When in doubt, exclude.
+# A missed vulnerability finding is recoverable.
+# A crashed PLC or medical device is not.
+# =============================================================
+
+excluded_hosts:
+
+  # ── OT / ICS / SCADA ───────────────────────────────────────
+  - ip: 10.30.0.10
+    label: "Siemens S7-1200 PLC — Assembly Line 1"
+    reason: "Will fault under port scan. Physical consequences possible."
+
+  - ip: 10.30.0.11
+    label: "Siemens S7-1200 PLC — Assembly Line 2"
+    reason: "Will fault under port scan. Physical consequences possible."
+
+  - ip: 10.30.0.20
+    label: "SCADA HMI — Production Floor"
+    reason: "Vendor states scanning will cause process interruption."
+
+  - range: 10.30.0.50/30
+    label: "Flow controllers — Building Utilities"
+    reason: "Legacy firmware crashes on SYN packets."
+
+  # ── Building Management ─────────────────────────────────────
+  - ip: 192.168.1.5
+    label: "Building Management System"
+    reason: "Fragile — vendor prohibits network scanning."
+
+  - ip: 192.168.1.6
+    label: "HVAC Controller"
+    reason: "Known to become unresponsive under scan load."
+
+  # ── Medical / Safety-Critical ───────────────────────────────
+  - range: 172.16.5.100/30
+    label: "Medical IoT Devices"
+    reason: "Safety-critical. Scanning prohibited by compliance policy."
+
+  # ── Infrastructure — scan separately if needed ──────────────
+  - ip: 192.168.1.1
+    label: "Core Router"
+    reason: "Managed separately. Scanning may affect routing tables."
+
+  - ip: 10.10.0.1
+    label: "DMZ Firewall"
+    reason: "Managed separately by network team."
+
+# ── Exclusion validation behavior ──────────────────────────────
+# 'strict' = abort entire segment scan if exclusion list
+#            cannot be loaded or parsed. Recommended for OT segments.
+# 'warn'   = log warning and continue (for non-OT segments).
+validation_mode: strict

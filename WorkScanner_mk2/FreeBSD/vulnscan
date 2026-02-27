@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+# PROVIDE: vulnscan
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# /usr/local/etc/rc.d/vulnscan
+# FreeBSD rc.d script for the vulnerability scanner.
+# This allows: service vulnscan start | stop | status | run
+#
+# To enable automatic start on boot, add to /etc/rc.conf:
+#   vulnscan_enable="YES"
+# Note: The scanner is normally triggered by cron, not rc.d.
+# This script is primarily for manual on-demand execution.
+
+. /etc/rc.subr
+
+name="vulnscan"
+rcvar="vulnscan_enable"
+
+load_rc_config $name
+: ${vulnscan_enable:="NO"}
+: ${vulnscan_user:="scanner"}
+: ${vulnscan_python:="/opt/vulnscan/venv/bin/python3"}
+: ${vulnscan_script:="/opt/vulnscan/orchestrator.py"}
+: ${vulnscan_logdir:="/opt/vulnscan/logs"}
+
+pidfile="/var/run/${name}.pid"
+command="/usr/sbin/daemon"
+command_args="-P ${pidfile} -u ${vulnscan_user} \
+    ${vulnscan_python} ${vulnscan_script}"
+
+start_precmd="vulnscan_prestart"
+extra_commands="run status"
+run_cmd="vulnscan_run"
+
+vulnscan_prestart()
+{
+    mkdir -p "${vulnscan_logdir}"
+    chown scanner:scanner "${vulnscan_logdir}"
+}
+
+vulnscan_run()
+{
+    echo "Running vulnerability scan as ${vulnscan_user}..."
+    su -m ${vulnscan_user} -c \
+        "${vulnscan_python} ${vulnscan_script}"
+}
+
+run_rc_command "$1"

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vulnerability Scan — Executive Summary {{ scan_date }}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", Arial, sans-serif; background: #f4f6f8;
+         color: #1a1a2e; padding: 40px 24px; }
+  .page { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 1.8em; color: #1a1a2e; margin-bottom: 4px; }
+  .meta { color: #666; font-size: 0.88em; margin-bottom: 32px; }
+  .meta strong { color: #333; }
+  .classification { display: inline-block; background: #c0392b; color: #fff;
+                    font-size: 0.75em; font-weight: bold; padding: 3px 10px;
+                    border-radius: 4px; margin-bottom: 12px; letter-spacing: 1px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr);
+             gap: 16px; margin-bottom: 32px; }
+  .kpi { background: #fff; border-radius: 10px; padding: 24px 16px;
+         text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+         border-top: 4px solid #1a1a2e; }
+  .kpi .num { font-size: 2.6em; font-weight: 700; line-height: 1; }
+  .kpi .lbl { color: #888; font-size: 0.82em; margin-top: 6px; }
+  .num-crit { color: #c0392b; }
+  .section { background: #fff; border-radius: 10px; padding: 24px;
+             margin-bottom: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+  .section h2 { font-size: 1.1em; color: #1a1a2e; margin-bottom: 16px;
+                padding-bottom: 8px; border-bottom: 2px solid #e8ecf0; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #1a1a2e; color: #fff; padding: 10px 14px;
+       text-align: left; font-size: 0.88em; }
+  td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; font-size: 0.9em; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px;
+           font-size: 0.78em; font-weight: 700; color: #fff; }
+  .badge-CRITICAL { background: #c0392b; }
+  .badge-HIGH     { background: #e67e22; }
+  .badge-MEDIUM   { background: #d4ac0d; color: #000; }
+  .badge-LOW      { background: #27ae60; }
+  .badge-INFO     { background: #2980b9; }
+  .count-CRITICAL { color: #c0392b; font-weight: 700; }
+  .count-HIGH     { color: #e67e22; font-weight: 700; }
+  .count-MEDIUM   { color: #c9991a; font-weight: 700; }
+  .count-LOW      { color: #27ae60; }
+  .count-INFO     { color: #2980b9; }
+  .zero           { color: #ccc; }
+  .footer { text-align: center; color: #bbb; font-size: 0.78em; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="classification">INTERNAL USE ONLY — SECURITY SENSITIVE</div>
+  <h1>Weekly Vulnerability Scan</h1>
+  <h1 style="color:#c0392b;font-size:1.1em;margin-top:4px;">Executive Summary</h1>
+  <p class="meta">Scan Date: <strong>{{ scan_date }}</strong>
+    &nbsp;·&nbsp; Generated: <strong>{{ scan_date }}</strong>
+    &nbsp;·&nbsp; System: <strong>Automated Internal Scanner (Air-Gapped)</strong>
+  </p>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="num">{{ summary.total_hosts }}</div>
+      <div class="lbl">Hosts Scanned</div>
+    </div>
+    <div class="kpi">
+      <div class="num">{{ summary.open_ports }}</div>
+      <div class="lbl">Open Ports Found</div>
+    </div>
+    <div class="kpi">
+      <div class="num">{{ summary.hosts_with_findings }}</div>
+      <div class="lbl">Hosts With Findings</div>
+    </div>
+    <div class="kpi">
+      <div class="num num-crit">{{ summary.severity_counts.CRITICAL }}</div>
+      <div class="lbl">Critical Findings</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Findings by Severity</h2>
+    <table>
+      <tr><th>Severity</th><th>Count</th><th>SLA</th><th>Risk Summary</th></tr>
+      {% for sev in severity_order %}
+      <tr>
+        <td><span class="badge badge-{{ sev }}">{{ sev }}</span></td>
+        <td class="count-{{ sev }}">{{ summary.severity_counts[sev] }}</td>
+        <td>{{ severity_descriptions[sev].split('.')[0] }}.</td>
+        <td style="color:#666;">{{ severity_descriptions[sev] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Findings by Network Segment</h2>
+    <table>
+      <tr>
+        <th>Segment</th><th>Hosts</th>
+        <th>Critical</th><th>High</th><th>Medium</th><th>Low</th><th>Status</th>
+      </tr>
+      {% for seg in segments %}
+      <tr>
+        <td><strong>{{ seg.label }}</strong></td>
+        <td>{{ seg.host_count }}</td>
+        {% for sev in ["CRITICAL","HIGH","MEDIUM","LOW"] %}
+        <td>
+          {% if seg.severity_counts[sev] > 0 %}
+            <span class="count-{{ sev }}">{{ seg.severity_counts[sev] }}</span>
+          {% else %}
+            <span class="zero">—</span>
+          {% endif %}
+        </td>
+        {% endfor %}
+        <td>
+          {% if seg.error %}
+            <span style="color:#c0392b;">&#9888; Error</span>
+          {% elif seg.severity_counts.CRITICAL > 0 %}
+            <span style="color:#c0392b;">&#9888; Action Required</span>
+          {% elif seg.severity_counts.HIGH > 0 %}
+            <span style="color:#e67e22;">Review Needed</span>
+          {% else %}
+            <span style="color:#27ae60;">&#10003; Acceptable</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="footer">
+    Generated by the Internal Vulnerability Scanning System &nbsp;·&nbsp;
+    No exploit code was used &nbsp;·&nbsp;
+    Handle according to your data classification policy
+  </div>
+
+</div>
+</body>
+</html>

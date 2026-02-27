@@ -1,0 +1,85 @@
+# =============================================================
+# Vulnerability Scanner — Primary Configuration
+# Air-gapped | Debian/Ubuntu | Enterprise | 6-20 Segments
+# =============================================================
+
+scan_settings:
+
+  phase1_discovery:
+    enabled: true
+    timing: T4
+    min_parallelism: 20
+
+  phase2_ports:
+    timing: T3
+    max_rate: 500
+    top_ports: 1000
+    version_intensity: 5
+    os_detection: true
+
+  phase3_vulns:
+    timing: T3
+    max_rate: 300
+    vulscan_db: cve.csv           # Local offline DB — /usr/share/nmap/scripts/vulscan/
+
+  parallelism:
+    max_concurrent_segments: 4   # Segments scanned simultaneously
+
+output:
+  base_directory: /scans
+  formats:
+    - executive_html
+    - technical_html
+    - json
+
+# ── Network Segments ──────────────────────────────────────────
+# Segments are processed in order listed. Place highest-priority
+# segments (DMZ, server farms) first so they complete earliest
+# within the parallel worker pool.
+# -------------------------------------------------------------
+networks:
+
+  - label: "DMZ — Public Facing"
+    priority: 1
+    ranges:
+      - 10.10.0.0/24
+
+  - label: "Server Farm — Production"
+    priority: 2
+    ranges:
+      - 10.20.0.0/22
+
+  - label: "Server Farm — Development"
+    priority: 3
+    ranges:
+      - 10.21.0.0/22
+
+  - label: "Corporate LAN — HQ"
+    priority: 4
+    ranges:
+      - 192.168.1.0/24
+      - 192.168.2.0/24
+
+  - label: "Corporate LAN — Branch A"
+    priority: 5
+    ranges:
+      - 192.168.10.0/24
+
+  - label: "Corporate LAN — Branch B"
+    priority: 6
+    ranges:
+      - 192.168.20.0/24
+
+  - label: "IoT Segment"
+    priority: 7
+    ranges:
+      - 172.16.5.0/24
+
+  - label: "OT/ICS Network"
+    priority: 8
+    ranges:
+      - 10.30.0.0/24
+    # Note: Fragile hosts in this segment must be in exclusions.yaml.
+    # The scanner will validate every resolved IP against the exclusion
+    # list immediately before each nmap invocation for this segment.
+    ot_segment: true              # Triggers extra pre-scan safety checks
