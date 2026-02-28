@@ -42,12 +42,12 @@ ls "$VULSCAN_DIR"/*.csv 2>/dev/null | while read db; do
     echo "         - $(basename "$db")"
 done
 
-# ── Scanner_mk2 service account ───────────────────────────────────
-echo "[4/7] Creating scanner_mk2 service account..."
-if id "scanner_mk2" &>/dev/null; then
-    echo "       User 'scanner_mk2' already exists."
+# ── scanner service account ───────────────────────────────────
+echo "[4/7] Creating scanner service account..."
+if id "scanner" &>/dev/null; then
+    echo "       User 'scanner' already exists."
 else
-    useradd -r -s /bin/false -d /opt/vulnscan scanner_mk2
+    useradd -r -s /bin/false -d /opt/vulnscan scanner
 fi
 
 # ── Directory structure ───────────────────────────────────────
@@ -61,7 +61,7 @@ cp "$SCRIPT_DIR/exclusions.yaml"      /opt/vulnscan/
 cp "$SCRIPT_DIR/technical.html.j2"  /opt/vulnscan/templates/
 cp "$SCRIPT_DIR/executive.html.j2"  /opt/vulnscan/templates/
 
-chown -R scanner_mk2:scanner_mk2 /opt/vulnscan /scans
+chown -R scanner:scanner /opt/vulnscan /scans
 chmod 750 /opt/vulnscan /scans
 chmod 640 /opt/vulnscan/config.yaml /opt/vulnscan/exclusions.yaml
 chmod 750 /opt/vulnscan/orchestrator.py /opt/vulnscan/report_generator.py
@@ -100,7 +100,7 @@ echo "║                                                       ║"
 echo "║  Installed:                                           ║"
 echo "║  ✓ nmap + vulscan offline CVE databases               ║"
 echo "║  ✓ python-libnmap, pyyaml, jinja2                    ║"
-echo "║  ✓ scanner_mk2 service account (limited privileges)       ║"
+echo "║  ✓ scanner service account (limited privileges)       ║"
 echo "║  ✓ systemd timer: every Sunday at 23:00              ║"
 echo "║  ✓ nginx report portal on :8080 with basic auth      ║"
 echo "║                                                       ║"
